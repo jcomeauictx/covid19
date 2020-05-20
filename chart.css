@@ -1,0 +1,21 @@
+html {
+	width: 100%;
+	height: 100%;
+}
+body {
+	width: 98%;  /* trying to prevent horizontal overflow */
+	height: 100%;
+}
+p {
+	overflow-wrap: break-word;
+	word-wrap: break-word;
+}
+.chart {
+	width: 100%;
+	height: 50%;
+}
+
+/* https://stackoverflow.com/a/41503905/493161 */
+.chart:after {
+	content: '\200b';
+}

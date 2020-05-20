@@ -1,0 +1,2 @@
+PATH=/bin:/usr/bin:/home/jcomeau/bin
+17 */3 * * * cd /var/www/jcomeau/covid19 && make --always-make --silent

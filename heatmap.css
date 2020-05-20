@@ -1,0 +1,17 @@
+html {
+	box-sizing: border-box;
+}
+*, *:before, *:after {
+	box-sizing: inherit;
+}
+html, body {
+	width: 100%;
+	height: 100%;
+}
+p {
+	overflow-wrap: break-word;
+	word-wrap: break-word;
+}
+input {
+	width: 30%;
+}

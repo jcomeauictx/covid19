@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Heat map of Covid-19</title>
+  <link rel="stylesheet" type="text/css" href="heatmap.css">
+  <script src="namespace.js"></script>
+  <script src="covid_confirmed_usafacts.js"></script>
+  <script src="covid_county_population_usafacts.js"></script>
+  <script src="covid_deaths_usafacts.js"></script>
+  <script src="covid_test_usafacts.js"></script>
+  <script src="heatmap.js">
+  <script data-ad-client="ca-pub-2489698116815602" async 
+    src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js">
+  </script>
+</head>
+<body>
+  <div>
+    <select name="datafile" id="datafile">
+      <option value="CovidConfirmedUsafacts" selected>Confirmed</option>
+      <option value="CovidDeathsUsafacts">Deaths</option>
+      <option value="CovidTestUsafacts">Test</option>
+    </select>
+    <button id="map-start">Start</button>
+    <input id="map-date" type="text" disabled>
+    <input id="map-area" type="text" disabled>
+  </div>
+  <div id="map-div">
+    <noscript>
+      JavaScript needs to be enabled in order to see the COVID-19 heat map.
+    </noscript>
+    <object type="image/svg+xml" data="counties.svg">
+      Sorry, your browser does not support SVG.
+    </object>
+  </div>
+</body>
+</html>
+<!-- vim: set tabstop=8 expandtab shiftwidth=2 softtabstop=2: -->
