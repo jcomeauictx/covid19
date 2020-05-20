@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>CDC Provisional Deaths</title>
+  <link rel="stylesheet" type="text/css" href="chart.css">
+  <script src="https://www.gstatic.com/charts/loader.js"></script>
+  <script src="namespace.js"></script>
+  <script src="cdcdata.js"></script>
+  <script src="fludata.js"></script>
+  <script src="chart.js"></script>
+  <script src="chart2.js"></script>
+  <script data-ad-client="ca-pub-2489698116815602" async 
+    src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js">
+  </script>
+</head>
+<body>
+  <div id="chart_div" class="chart"><noscript>JavaScript needs to be enabled in order to see the COVID-19 chart.</noscript></div>
+  <p>
+Data from <a href="https://www.cdc.gov/nchs/nvss/vsrr/COVID19/index.htm">https://www.cdc.gov/nchs/nvss/vsrr/COVID19/index.htm</a>
+  </p><p>
+"Number of deaths reported in [CDC] table are the total number of deaths received and coded as of the date of analysis, and do not represent all deaths that occurred in that period.
+  </p><p>
+"Data during this period are incomplete because of the lag in time between when the death occurred and when the death certificate is completed, submitted to NCHS and processed for reporting purposes. This delay can range from 1 week to 8 weeks or more, depending on the jurisdiction, age, and cause of death.
+  </p><p>
+"Percent of expected deaths is the number of deaths for all causes for this week in 2020 compared to the average number across the same week in 2017–2019. Previous analyses of 2015–2016 provisional data completeness have found that completeness is lower in the first few weeks following the date of death."
+  </p><p>
+<a href="importdata.py">importdata.py</a> is the script I used to massage the (deliberately obfuscated?) CSV (comma-separated values) <a href="cdcdata.csv">file</a> from the CDC into the JavaScript <a href="cdcdata.js">format</a> needed by the Google <a href="chart.js">Chart</a> <a href="https://developers.google.com/chart">framework</a>.
+  </p>
+  <p>
+  But as of May 1, 2020, the CDC removed the CSV file download from the page, generating the table with Javascript. I have written a <a href="fetchcovid.py">Selenium script</a> to scrape it automatically, but it's still possible to "scrape" it manually by highlighting and pasting from the page. Luckily it is parseable directly as a <a href="importtsv.py">TSV</a> (tab separated values) <a href="cdcdata.tsv">file</a>.
+  </p>
+  <p>
+  See also <a href="https://www.cdc.gov/flu/weekly/">https://www.cdc.gov/flu/weekly/</a> and <a href="https://gis.cdc.gov/grasp/fluview/mortality.html">https://gis.cdc.gov/grasp/fluview/mortality.html</a> for more interesting charts and data. The latter is my source for <a href="fludata.csv">historical death data</a>, by clicking the Downloads button at the top of the page. And I just now (May 3, 2020) found out about yet <em>another</em> CDC page that gives a <a href="https://www.cdc.gov/coronavirus/2019-ncov/cases-updates/cases-in-us.html">much higher</a> number of deaths attributed to covid-19. But this uses both confirmed <em>and</em> suspected deaths, and the raw data is from <a href="https://usafacts.org/visualizations/coronavirus-covid-19-spread-map/">usafacts.org</a>.
+  </p>
+  <p>
+I got inspired to look for that fluview data source after seeing <a href="https://accordingtohoyt.com/2020/03/27/covid-19-and-us-mortality-by-i-ratel/">I. Ratel's chart</a> from March 2020, which makes this year's overall mortality look unimpressive compared to previous years. But then I figured "Well, April data will surely show a significant increase." As of April 25 it had not, but shortly after that a large spike appeared in this year's deaths, retroactive to April 4th, week 14.
+  </p>
+  <p>
+  There are oddities you will notice with this chart: first, there are fractional numbers here and there. This is due to incomplete data for some weeks, which I dealt with by multiplying the deaths by the inverse of the percentage, to get the <em>expected</em> deaths after the rest of the data comes in. Also, the final two weeks of the <a href="fludata.csv">provisional data</a> are likely to be low even <em>after</em> this adjustment, for whatever reason. I only know this by observing the data week after week. Another problem is the "week 53" data from 2014-15. After trying two other approaches, I used Ratel's method and <a href="importdata2.py">put week 53 in the "week 1" slot</a> and bumped all the rest of the weeks over.
+  </p>
+  <p>
+  Since it takes a few days for the flu season mortality chart to update, I wrote <a href="mergedata.py">yet another script</a> to merge the more-often-updated covid-19 "Total Deaths" number into the data for the chart below. Note that it marks the <a href="merged.csv">percent complete</A> as being 100% when it does, to avoid overrrepresenting the deaths, but that doesn't mean it's really complete. You can compare to <a href="fludata.csv">fludata.csv</a> for what was actually downloaded.
+  </p>
+  <p>
+  This <a href="https://www.nytimes.com/interactive/2020/04/21/world/coronavirus-missing-deaths.html">New York Times article from April</a> continues to be updated. It's showing many other countries with a steep spike in all-mortality deaths followed by an equally steep dropoff. This gives me hope of a similar phenomenon here in the U.S. And note that a few places, e.g. Norway, Israel, and South Africa, have shown no spike in overall deaths at all during the periods charted to date (May 13, 2020).
+  </p>
+  <p>
+  I've got two other spinoffs of this code at <a href="heatmap.html">heatmap.html</a> and <a href="statechart.html">statechart.html</a>. And finally I've put all the code up at <a href="https://github.com/jcomeauictx/covid19">github</a> for the community to take over, with some notes on where a good place to start might be.
+  </p>
+  <div id="chart2_div" class="chart"><noscript>JavaScript needs to be enabled in order to see the year-to-year comparison chart.</noscript></div>
+</body>
+</html>
+<!-- vim: set tabstop=8 expandtab shiftwidth=2 softtabstop=2: -->
