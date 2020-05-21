@@ -26,7 +26,9 @@ def sum_years(jsfile, year0, year1, cutoff=None):
         cutoff = f' {cutoff}'
         year1 = year1[:cutoffs.index(cutoff) + 1]
     year0 = [data[n][index0 + 1] for n in range(len(year1))]
-    return sum(year0), sum(year1), f'through week {cutoff.strip()}'
+    sums = sum(year0), sum(year1)
+    ratio = sums[1] / sums[0]
+    return sums +  (ratio, f'through week {cutoff.strip()}')
 
 if __name__ == '__main__':
     print(sum_years(*sys.argv[1:]))
