@@ -15,12 +15,39 @@
   </script>
 </head>
 <body>
-  <div>
-    <select name="datafile" id="datafile">
+  <div class="halfscreen">
+    <label for="data-file">Data to plot</label>:
+    <select name="datafile" id="data-file">
       <option value="CovidConfirmedUsafacts" selected>Confirmed</option>
       <option value="CovidDeathsUsafacts">Deaths</option>
       <option value="CovidTestUsafacts">Test</option>
     </select>
+    <br>
+    <label for="data-algorithm">Algorithm to use</label>:
+    <select name="algorithm" id="data-algorithm">
+      <option value="naive" selected>Naive</option>
+      <option value="total">None (just show totals)</option>
+      <option value="speed">Rate of Spread</option>
+      <option value="acceleration">Acceleration</option>
+    </select>
+    <br>
+  </div>
+  <div class="halfscreen">
+    <label for="data-smoothing">Smoothing</label>:
+    <select name="smoothing" id="data-smoothing">
+      <option value="0" selected>None</option>
+      <option value="3">3-day moving average</option>
+      <option value="7">7-day moving average</option>
+    </select>
+    <br>
+    <label for="data-scaling">Scale relative to population</label>:
+    <select name="scaling" id="data-scaling">
+      <option value="false" selected>No</option>
+      <option value="true">Yes</option>
+    </select>
+    <br>
+  </div>
+  <div>
     <button id="map-start">Start</button>
     <input id="map-date" type="text" disabled>
     <input id="map-area" type="text" disabled>
@@ -33,6 +60,9 @@
       Sorry, your browser does not support SVG.
     </object>
   </div>
+  <p>
+  Currently, the only way to restart is to refresh the page.
+  </p>
 </body>
 </html>
 <!-- vim: set tabstop=8 expandtab shiftwidth=2 softtabstop=2: -->
