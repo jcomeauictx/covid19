@@ -11,7 +11,7 @@ USA_JS := $(USAFACTS:.csv=.js)
 # run Selenium Webdriver headless when set
 MOZ_HEADLESS ?= 1
 export
-all: cdcdata.js fludata.js $(USA_JS)
+all: $(USA_JS) fludata.js cdcdata.js
 cdcdata.js: importtsv.py cdcdata.tsv
 	./$+ $@
 fludata.js: importdata2.py merged.csv
@@ -89,3 +89,6 @@ sum:	oldflu.js.sum
 covid_%.csv: .FORCE
 	wget -q -c -N $(USADATA)/public/data/covid-19/$@ || true
 .PRECIOUS: $(USAFACTS)
+shell:
+	@echo Dropping you into a subshell. ^D to exit. >&2
+	bash -l
