@@ -54,19 +54,36 @@ cjc.dateIndex = 0;
 cjc.countyIndex = 0;
 cjc.color = null;  // algorithm to use when coloring
 cjc.delay = 1; // ms between iterations
+cjc.dataMax = 0;
+cjc.dataMin = 0;
+cjc.gradient = [];
 //developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set
 cjc.difference = function(set0, set1) {
-  let _difference = new Set(set0)
-  for (let elem of set1) {
-    _difference.delete(elem)
+  let difference = new Set(set0)
+  for (let element of set1) {
+    difference.delete(element)
   }
-  return _difference
+  return difference
 }
 cjc.rgbcolor = function(string) {
   return string.replace(/[^\d,]/g, '').split(',');
 }
 cjc.rgbstring = function(array) {
   return 'rgb(' + array[0] + ',' + array[1] + ',' + array[2] + ')';
+}
+// initialize color gradient, most negative=blue, going to cyan
+// zero is green, going through yellow to red
+for (let red = 0, green = 0, blue = 255; green < 256; green++) {
+  cjc.gradient.push(cjc.rgbstring([red, green, blue]));
+}
+for (let red = 0, green = 255, blue = 254; blue >= 0; blue--) {
+  cjc.gradient.push(cjc.rgbstring([red, green, blue]));
+}
+for (let red = 1, green = 255, blue = 0; red < 256; red++) {
+  cjc.gradient.push(cjc.rgbstring([red, green, blue]));
+}
+for (let red = 255, green = 254, blue = 0; green >= 0; green--) {
+  cjc.gradient.push(cjc.rgbstring([red, green, blue]));
 }
 cjc.shuffle = function(array) {
   array.sort(() => Math.random() - 0.5);
@@ -88,6 +105,22 @@ cjc.min = function(accumulator, value) {
 cjc.max = function(accumulator, value) {
   return Math.max(accumulator, value);
 };
+cjc.cleanup = function(data) {
+  console.log("length of data before cleanup " + data.length);
+  const cleaned = data.filter(function(row) {return cjc.paths[row[0]]});
+  console.log("length of data after cleanup " + cleaned.length);
+  for (let i = 0; i < cleaned.length; i++) {
+    const row = cleaned[i];
+    for (let j = row.length - 1; j > cjc.dataOffset; j--) {
+      if (row[j - 1] > row[j]) {
+        cjc.debug('cleanup', 'fixing bad datum ' + row[j - 1] + ' in ' +
+          JSON.stringify(row.slice(0, j + 5)));
+        row[j - 1] = row[j];
+      }
+    }
+  }
+  return cleaned;
+};
 cjc.init = function() {
   cjc.selection = document.getElementById('data-file');
   cjc.selected = cjc.selection[cjc.selection.selectedIndex].value;
@@ -97,7 +130,7 @@ cjc.init = function() {
   cjc.scaling = document.getElementById('data-scaling');
   if (cjc.selected == 'CovidTestUsafacts') cjc.delay = 1000;
   cjc.header = cjc[cjc.selected][0];
-  cjc.data = cjc[cjc.selected].slice(1)
+  cjc.data = cjc[cjc.selected].slice(1);
   console.log('header', cjc.header.slice(0, 10), 'data', cjc.data[0].slice(10));
   if (cjc.header[0] == 'countyFIPS') {
     for (let i = 0; i < cjc.header.length; i++) {
@@ -111,8 +144,11 @@ cjc.init = function() {
   } else {
     console.log('unexpected header[0]', cjc.header[0]);
   }
+  cjc.data = cjc.cleanup(cjc.data);
   cjc.smoothData(parseInt(cjc.smoothing[cjc.smoothing.selectedIndex].value));
   cjc.scaleData(cjc.scaling[cjc.scaling.selectedIndex].value == "true");
+  cjc.differentiate(["total", "speed", "acceleration"].indexOf(
+    cjc.algorithm[cjc.algorithm.selectedIndex].value));
   cjc.color(null, true);  // run initialization for color algorithm
   cjc.dateIndex = cjc.dataOffset;
   cjc.countyIndex = 0;
@@ -131,6 +167,18 @@ cjc.scaleData = function(choice) {
     for (let i = 0; i < cjc.data.length; i++) {
       cjc.byPopulation(cjc.data[i]);
     }
+  }
+};
+cjc.differentiate = function(number) {
+  if (number > 0) {
+    console.log('differentiating ' + number + ' times')
+    for (let i = 0; i < number; i++) {
+      for (let j = 0; j < cjc.data.length; j++) {
+        cjc.differential(cjc.data[j], i);
+      }
+    }
+  } else {
+    console.log('not differentiating, number=' + number);
   }
 };
 cjc.debugNext = function() {
@@ -175,6 +223,58 @@ cjc.naive = function(path, init) {
   }
   path.style.fill = color;
 };
+cjc.speed = function(path, init) {
+  if (init) {
+    let max = 0, min = 0;
+    for (let i = 0; i < cjc.data.length; i++) {
+      max = Math.max(max, cjc.data[i].slice(cjc.dataOffset).reduce(cjc.max));
+      min = Math.min(min, cjc.data[i].slice(cjc.dataOffset).reduce(cjc.min));
+      if (['speed.init', true].includes(cjc.debugging)) {
+        if (cjc.dataMax < max) {
+          cjc.debug('speed.init', 'replacing cjc.dataMax with ' + max +
+            ' from ' + cjc.data[i][0]);
+          cjc.dataMax = max;
+        }
+        if (cjc.dataMin > min) {
+          cjc.debug('speed.init', 'replacing cjc.dataMin with ' + min +
+            ' from ' + cjc.data[i][0]);
+          cjc.dataMin = min;
+        }
+      }
+    }
+    cjc.debug('speed.init', 'max: ' + max + ', min: ' + min);
+    cjc.dataMax = max;
+    cjc.dataMin = min;
+    return;
+  }
+  let number = cjc.changed[cjc.countyIndex][cjc.dateIndex];
+  cjc.area.value = path.getAttribute('title');
+  // scale the number to fit color gradient
+  // this will only work reliably with an odd number of colors
+  let halfway = Math.floor(cjc.gradient.length / 2);
+  let scaled = null;
+  if (number < 0) {
+    scaled = Math.floor((number * halfway) / cjc.dataMin);
+  } else {
+    scaled = halfway + Math.floor((number * halfway) / cjc.dataMax);
+  }
+  cjc.debug('speed', 'number: ' + number + ', scaled: ' + scaled);
+  path.style.fill = cjc.gradient[scaled];
+  cjc.debug('speed', 'colored path ' + path.id + ' ' + cjc.gradient[scaled]);
+};
+cjc.total = cjc.speed;
+cjc.acceleration = cjc.speed;
+cjc.differential = function(row, pass) {
+  cjc.debug('differential', 'running differential on row', row);
+  for (let i = cjc.dataOffset; i < row.length - 1; i++) {
+    row[i] = row[i + 1] - row[i];
+    if (pass == 0 && row[i] < 0) {
+      throw "negative number found in " + JSON.stringify(row);
+    }
+  }
+  row[row.length - 1] = row[row.length - 2];  // copy final value
+  cjc.debug('differential', 'after differential on row', row);
+};
 cjc.movingAverage = function(row, days) {
   for (let i = row.length - 1; i > cjc.dataOffset; i--) {
     sample = row.slice(Math.max(cjc.dataOffset, i - days), i);
@@ -182,12 +282,20 @@ cjc.movingAverage = function(row, days) {
     row[i] = sample.reduce(cjc.sum) / sample.length;
   }
 };
-cjc.byPopulation = function(row) {
+cjc.population = function(row) {
   const key = row[0];
-  cjc.debug('population', row, key);
-  const population = cjc.CovidCountyPopulationUsafacts
-    .filter(function(row) {return row[0] == key})[0][3];
-  cjc.debug('population', 'population: ' + population);
+  cjc.debug('population', 'row', row, 'key=' + key);
+  const found = cjc.CovidCountyPopulationUsafacts
+    .filter(function(row) {return row[0] == key;});
+  if (found.length == 0) {
+    // should *not* happen for county
+    console.log("No population data for county " + key);
+    return undefined;
+  } else return found[0][3];
+};
+cjc.byPopulation = function(row) {
+  let population = cjc.population(row);
+  if (!population) population = 1000000000;  // extremely large number
   for (let i = row.length - 1; i >= cjc.dataOffset; i--) {
     row[i] = row[i] / population;
   }
