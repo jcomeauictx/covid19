@@ -254,7 +254,7 @@ cjc.speed = function(path, init) {
   let halfway = Math.floor(cjc.gradient.length / 2);
   let scaled = null;
   if (number < 0) {
-    scaled = Math.floor((number * halfway) / cjc.dataMin);
+    scaled = -halfway + Math.floor((number * halfway) / cjc.dataMin);
   } else {
     scaled = halfway + Math.floor((number * halfway) / cjc.dataMax);
   }
