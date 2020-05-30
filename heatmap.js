@@ -38,6 +38,8 @@ cjc.smoothing = null;
 cjc.scaling = null;
 cjc.header = cjc.CovidConfirmedUsafacts[0];
 cjc.data = cjc.CovidConfirmedUsafacts.slice(1);
+cjc.cleaned = null;
+cjc.dataDict = null;
 cjc.changed = null;
 cjc.debugging = false;  // set to true in console for verbose logging
 // the following are filled in by window.onload
@@ -107,8 +109,10 @@ cjc.max = function(accumulator, value) {
 };
 cjc.cleanup = function(data) {
   console.log("length of data before cleanup " + data.length);
+  // first remove everything without a matching path.
   const cleaned = data.filter(function(row) {return cjc.paths[row[0]]});
   console.log("length of data after cleanup " + cleaned.length);
+  // now make sure each row is continuously increasing.
   for (let i = 0; i < cleaned.length; i++) {
     const row = cleaned[i];
     for (let j = row.length - 1; j > cjc.dataOffset; j--) {
@@ -144,7 +148,13 @@ cjc.init = function() {
   } else {
     console.log('unexpected header[0]', cjc.header[0]);
   }
-  cjc.data = cjc.cleanup(cjc.data);
+  cjc.cleaned = cjc.cleanup(cjc.data);
+  // build a lookup table based on county FIPS number
+  cjc.dataDict = cjc.cleaned.reduce((accumulator, row) =>
+    {accumulator[row[0]] = row.slice(); return accumulator;}, {}
+  );
+  // now overwrite original data with clean
+  cjc.data = cjc.cleaned.slice();
   cjc.smoothData(parseInt(cjc.smoothing[cjc.smoothing.selectedIndex].value));
   cjc.scaleData(cjc.scaling[cjc.scaling.selectedIndex].value == "true");
   cjc.differentiate(["total", "speed", "acceleration"].indexOf(
@@ -153,7 +163,7 @@ cjc.init = function() {
   cjc.dateIndex = cjc.dataOffset;
   cjc.countyIndex = 0;
   cjc.shuffle(cjc.data);
-  cjc.changed = cjc.data.filter(row => row[cjc.dateIndex] > 0);
+  cjc.changed = cjc.data.filter(row => cjc.dataDict[row[0]][cjc.dateIndex] > 0);
   if (cjc.changed.length == 0) cjc.changed = cjc.data.slice(0, 1);
 };
 cjc.smoothData = function(days) {
@@ -242,7 +252,7 @@ cjc.speed = function(path, init) {
         }
       }
     }
-    cjc.debug('speed.init', 'max: ' + max + ', min: ' + min);
+    console.log('speed.init', 'max: ' + max + ', min: ' + min);
     cjc.dataMax = max;
     cjc.dataMin = min;
     return;
@@ -254,11 +264,22 @@ cjc.speed = function(path, init) {
   let halfway = Math.floor(cjc.gradient.length / 2);
   let scaled = null;
   if (number < 0) {
-    scaled = -halfway + Math.floor((number * halfway) / cjc.dataMin);
+    scaled = halfway - Math.floor((number * halfway) / cjc.dataMin);
+    cjc.debug('speed', 'calculating ' + halfway + ' - Math.floor((' + number +
+      ' * ' + halfway + ') / ' + cjc.dataMin + '): ' + scaled);
   } else {
     scaled = halfway + Math.floor((number * halfway) / cjc.dataMax);
   }
-  cjc.debug('speed', 'number: ' + number + ', scaled: ' + scaled);
+  cjc.debug(path.id, path.id + ' number: ' + number + ', scaled: ' + scaled +
+    ' on ' + cjc.header[cjc.dateIndex]);
+  if ([0, cjc.gradient.length - 1].includes(scaled)) {
+    console.log('plotting outlier value ' + number + ' for ' +
+      cjc.area.value);
+  } else if (scaled < 0 || scaled >= cjc.gradient.length) {
+    console.error('out of bounds value ' + number + ' in ' + cjc.area.value);
+    if (scaled < 0) scaled = 0;
+    else scaled = cjc.gradient.length - 1;
+  }
   path.style.fill = cjc.gradient[scaled];
   cjc.debug('speed', 'colored path ' + path.id + ' ' + cjc.gradient[scaled]);
 };
@@ -326,7 +347,9 @@ cjc.next = function() {
     } else {
       cjc.debug(true, 'starting ' + cjc.header[cjc.dateIndex]);
       cjc.shuffle(cjc.data);
-      cjc.changed = cjc.data.filter(row => row[cjc.dateIndex] > 0);
+      cjc.changed = cjc.data.filter(
+        row => cjc.dataDict[row[0]][cjc.dateIndex] > 0
+      );
       if (cjc.changed.length == 0) cjc.changed = cjc.data.slice(0, 1);
     }
   }
