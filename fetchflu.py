@@ -46,26 +46,26 @@ def fetchflu(url):
     finally:
         BROWSER.quit()
 
-def click(selector, selector_type='css_selector', attempt=1):
+def click(selector, selector_type='css_selector'):
     '''
     Wait for element to be clickable, and click it.
     '''
-    logging.info("finding '%s' by '%s'", selector, selector_type)
-    element = WebDriverWait(BROWSER, 10).until(
-        expected_conditions.element_to_be_clickable(
-            (getattr(By, selector_type.upper()), selector)
+    oops = None
+    for attempt in range(10):
+        logging.info("finding '%s' by '%s'", selector, selector_type)
+        element = WebDriverWait(BROWSER, 10).until(
+            expected_conditions.element_to_be_clickable(
+                (getattr(By, selector_type.upper()), selector)
+            )
         )
-    )
-    logging.info('clicking %s "%s", attempt %d',
-                 element.tag_name, element.text, attempt)
-    try:
-        element.click()
-    except ElementClickInterceptedException as oops:
-        logging.info('failed click: %s', oops)
-        if attempt == 3:
-            raise oops
-        else:
-            click(selector, selector_type, attempt + 1)
+        logging.info('clicking %s "%s", attempt %d',
+                     element.tag_name, element.text, attempt)
+        try:
+            element.click()
+            return
+        except ElementClickInterceptedException as oops:
+            logging.info('failed click: %s', oops)
+    raise oops
 
 if __name__ == '__main__':
     fetchflu(*(sys.argv[1:] or [WEBSITE]))
