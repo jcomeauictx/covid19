@@ -20,7 +20,7 @@ HEADERS = [
     'Deaths from All Causes',
     'Percent of Expected Deaths2',
     'Deaths involving Pneumonia, with or without COVID-19,'
-        ' excluding Influenza deaths (J12.0–J18.9)3'
+        ' excluding Influenza deaths (J12.0–J18.9)3',
     'Deaths involving COVID-19 and Pneumonia, excluding Influenza'
         ' (U07.1 and J12.0–J18.9)3',
     'All Deaths involving Influenza, with or without COVID-19 or Pneumonia'
@@ -29,7 +29,7 @@ HEADERS = [
 ]
 WANTED = [
     'Week ending date in which the death occurred',
-    'COVID-19 Deaths (U07.1)1',
+    'All Deaths involving COVID-19 (U07.1)1',
     'Deaths from All Causes',
     'Percent of Expected Deaths2',
 ]
