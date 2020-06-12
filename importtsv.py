@@ -16,13 +16,16 @@ logging.basicConfig(level=logging.DEBUG if __debug__ else logging.INFO)
 
 HEADERS = [
     'Week ending date in which the death occurred',
-    'COVID-19 Deaths (U07.1)1',
+    'All Deaths involving COVID-19 (U07.1)1',
     'Deaths from All Causes',
     'Percent of Expected Deaths2',
-    'Pneumonia Deaths (J12.0–J18.9)3',
-    'Deaths with Pneumonia and COVID-19 (J12.0–J18.9 and U07.1)3',
-    'Influenza Deaths (J09–J11)4',
-    'Deaths with Pneumonia, Influenza, or COVID-19 (U07.1 or J09–J18.9)5'
+    'Deaths involving Pneumonia, with or without COVID-19,'
+        ' excluding Influenza deaths (J12.0–J18.9)3'
+    'Deaths involving COVID-19 and Pneumonia, excluding Influenza'
+        ' (U07.1 and J12.0–J18.9)3',
+    'All Deaths involving Influenza, with or without COVID-19 or Pneumonia'
+        ' (J09–J11), includes COVID-19 or Pneumonia4',
+    'Deaths involving Pneumonia, Influenza, or COVID-19 (U07.1 or J09–J18.9)5'
 ]
 WANTED = [
     'Week ending date in which the death occurred',
@@ -52,8 +55,8 @@ def dataimport(rawdata):
     rows = [row for row in tsvin]
     headers = rows.pop(0)
     if headers != HEADERS:
-        raise ValueError('Headers have changed: %s not the same as %s',
-                         headers, HEADERS)
+        raise ValueError('Headers have changed: %s not the same as %s' %
+                         (headers, HEADERS))
     selected = [dict(zip(headers, row)) for row in rows if row[0] != TOTAL]
     cleaned = [[numberclean(row, item) for item in WANTED] for row in selected]
     return cleaned
