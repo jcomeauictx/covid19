@@ -8,6 +8,7 @@ USADATA ?= https://usafactsstatic.blob.core.windows.net
 USAFACTS := covid_deaths_usafacts.csv covid_confirmed_usafacts.csv \
 	covid_county_population_usafacts.csv covid_test_usafacts.csv
 USA_JS := $(USAFACTS:.csv=.js)
+QUIET ?= -q  # for wget, `make QUIET= covid_*.csv` to view progress
 # run Selenium Webdriver headless when set
 MOZ_HEADLESS ?= 1
 export
@@ -87,6 +88,9 @@ sum:	oldflu.js.sum
 %.js:	csvtojs.py %.csv
 	./$+
 covid_%.csv: .FORCE
+	# on some machines, usadata always returns that the file has not
+	# been updated even though it has. so we have to defeat that.
+	touch -m -t 200001010000 $@
 	wget -q -c -N $(USADATA)/public/data/covid-19/$@ || true
 .PRECIOUS: $(USAFACTS)
 shell:
