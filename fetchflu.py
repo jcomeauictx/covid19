@@ -27,7 +27,7 @@ WEBSITE = os.getenv('FLUVIEW') or FLUVIEW
 def fetchflu(url):
     try:
         try:
-            BROWSER.implicitly_wait(10)
+            BROWSER.implicitly_wait(30)
             can_implicitly_wait = True
         except InvalidArgumentException as error:
             can_implicitly_wait = False
