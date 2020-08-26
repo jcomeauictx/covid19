@@ -96,3 +96,5 @@ covid_%.csv: .FORCE
 shell:
 	@echo Dropping you into a subshell. ^D to exit. >&2
 	bash -l
+env:
+	$@
