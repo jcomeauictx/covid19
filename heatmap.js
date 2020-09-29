@@ -59,6 +59,7 @@ cjc.delay = 1; // ms between iterations
 cjc.dataMax = 0;
 cjc.dataMin = 0;
 cjc.gradient = [];
+cjc.initialized = false;
 //developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set
 cjc.difference = function(set0, set1) {
   let difference = new Set(set0)
@@ -110,7 +111,13 @@ cjc.max = function(accumulator, value) {
 cjc.cleanup = function(data) {
   console.log("length of data before cleanup " + data.length);
   // first remove everything without a matching path.
-  const cleaned = data.filter(function(row) {return cjc.paths[row[0]]});
+  let cleaned = data.filter(function(row) {return cjc.paths[row[0]]});
+  // now remove every row that isn't all numeric
+  // required because usafacts data for Weston County, WY is corrupted
+  // with some data from Sevier County, UT, including those strings.
+  cleaned = cleaned.filter(function(row) {
+    return !isNaN(row.slice(cjc.dataOffset).reduce(cjc.sum));
+  });
   console.log("length of data after cleanup " + cleaned.length);
   // now make sure each row is continuously increasing.
   for (let i = 0; i < cleaned.length; i++) {
@@ -126,6 +133,10 @@ cjc.cleanup = function(data) {
   return cleaned;
 };
 cjc.init = function() {
+  if (cjc.initialized) {
+    console.log("Heatmap data already initialized");
+    return;
+  }
   cjc.selection = document.getElementById('data-file');
   cjc.selected = cjc.selection[cjc.selection.selectedIndex].value;
   cjc.algorithm = document.getElementById('data-algorithm');
@@ -165,6 +176,7 @@ cjc.init = function() {
   cjc.shuffle(cjc.data);
   cjc.changed = cjc.data.filter(row => cjc.dataDict[row[0]][cjc.dateIndex] > 0);
   if (cjc.changed.length == 0) cjc.changed = cjc.data.slice(0, 1);
+  cjc.initialized = true;
 };
 cjc.smoothData = function(days) {
   if (days == 0) return;
@@ -238,6 +250,10 @@ cjc.speed = function(path, init) {
     let max = 0, min = 0;
     for (let i = 0; i < cjc.data.length; i++) {
       max = Math.max(max, cjc.data[i].slice(cjc.dataOffset).reduce(cjc.max));
+      if (isNaN(max)) {
+        console.log("Bad array: " + cjc.data[i]);
+        throw "Not a number: " + max;
+      }
       min = Math.min(min, cjc.data[i].slice(cjc.dataOffset).reduce(cjc.min));
       if (['speed.init', true].includes(cjc.debugging)) {
         if (cjc.dataMax < max) {
@@ -263,6 +279,7 @@ cjc.speed = function(path, init) {
   // this will only work reliably with an odd number of colors
   let halfway = Math.floor(cjc.gradient.length / 2);
   let scaled = null;
+  if (typeof number != "number") throw "Not a number: " + number;
   if (number < 0) {
     scaled = halfway - Math.floor((number * halfway) / cjc.dataMin);
     cjc.debug('speed', 'calculating ' + halfway + ' - Math.floor((' + number +
