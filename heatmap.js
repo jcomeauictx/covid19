@@ -247,30 +247,20 @@ cjc.naive = function(path, init) {
 };
 cjc.speed = function(path, init) {
   if (init) {
-    let max = 0, min = 0;
+    const maxlist = [], minlist = [];
     for (let i = 0; i < cjc.data.length; i++) {
-      max = Math.max(max, cjc.data[i].slice(cjc.dataOffset).reduce(cjc.max));
-      if (isNaN(max)) {
-        console.log("Bad array: " + cjc.data[i]);
-        throw "Not a number: " + max;
-      }
-      min = Math.min(min, cjc.data[i].slice(cjc.dataOffset).reduce(cjc.min));
-      if (['speed.init', true].includes(cjc.debugging)) {
-        if (cjc.dataMax < max) {
-          cjc.debug('speed.init', 'replacing cjc.dataMax with ' + max +
-            ' from ' + cjc.data[i][0]);
-          cjc.dataMax = max;
-        }
-        if (cjc.dataMin > min) {
-          cjc.debug('speed.init', 'replacing cjc.dataMin with ' + min +
-            ' from ' + cjc.data[i][0]);
-          cjc.dataMin = min;
-        }
-      }
+      maxlist.push(cjc.data[i].slice(cjc.dataOffset).reduce(cjc.max));
+      minlist.push(cjc.data[i].slice(cjc.dataOffset).reduce(cjc.min));
     }
-    console.log('speed.init', 'max: ' + max + ', min: ' + min);
-    cjc.dataMax = max;
-    cjc.dataMin = min;
+    maxlist.sort((a, b) => a - b); minlist.sort((a, b) => a - b);
+    // now let's remove outliers which due to bad data can make normal
+    // fluctuations invisible
+    // here we remove top and bottom 2% but it should be made selectable
+    let offset = Math.round(maxlist.length * 0.02);
+    console.log('max outliers: ' + maxlist.slice(maxlist.length - offset - 1));
+    console.log('min outliers: ' + minlist.slice(0, offset + 1));
+    cjc.dataMax = maxlist[maxlist.length - offset - 1];
+    cjc.dataMin = minlist[offset]
     return;
   }
   let number = cjc.changed[cjc.countyIndex][cjc.dateIndex];
