@@ -90,7 +90,7 @@ sum:	oldflu.js.sum
 covid_%.csv: .FORCE
 	# on some machines, usadata always returns that the file has not
 	# been updated even though it has. so we have to defeat that.
-	touch -m -t 200001010000 $@
+	#touch -m -t 200001010000 $@
 	wget -q -c -N $(USADATA)/public/data/covid-19/$@ || true
 .PRECIOUS: $(USAFACTS)
 shell:
