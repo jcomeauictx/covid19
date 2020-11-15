@@ -12,7 +12,7 @@ function drawChart2() {
 
   const options = {
     title: 'CDC Flu Season Weekly Deaths from https://jc.unternet.net/covid19/',
-    legend: {position: 'bottom', alignment: 'center'},
+    legend: {position: 'top', alignment: 'center', maxLines: 10},
     vAxis: {
       title: 'Total Deaths',
     }
