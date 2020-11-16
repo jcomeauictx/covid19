@@ -10,6 +10,7 @@ function drawChart2() {
 
   data.addRows(fluData);
 
+  // legend.maxLines only works when legend.position == 'top'
   const options = {
     title: 'CDC Flu Season Weekly Deaths from https://jc.unternet.net/covid19/',
     legend: {position: 'top', alignment: 'center', maxLines: 10},
